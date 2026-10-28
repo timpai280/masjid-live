@@ -29,3 +29,16 @@ h2 { margin:6px 0; }
 a { color:var(--green); }
 table { width:100%; border-collapse:collapse; font-size:15px; }
 td, th { padding:6px; border-bottom:1px solid #e6ece9; text-align:start; }
+:root { --orange:#e37400; }
+.btn.orange { background:var(--orange); }
+.btn.small { font-size:14px; }
+.badge.paused { background:var(--orange); color:#fff; }
+.row { display:flex; gap:10px; margin-top:8px; }
+.row .btn { flex:1; }
+.ok { color:var(--green); font-size:15px; }
+.schedule { background:#eef6f2; border-radius:12px; padding:10px 12px; margin:12px 0 4px; text-align:start; white-space:pre-wrap; font-size:15px; }
+textarea { width:100%; font-size:17px; padding:10px 12px; border:2px solid #d7e2dd; border-radius:12px; margin-bottom:12px; font-family:inherit; resize:vertical; }
+input.normal { direction:auto; font-family:inherit; }
+.rec { border-bottom:1px solid #e6ece9; padding:10px 0; }
+.rec audio { width:100%; margin-top:6px; }
+.btn:disabled { opacity:.5; }

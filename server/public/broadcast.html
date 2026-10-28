@@ -16,7 +16,7 @@
 <main>
   <section id="login" class="card">
     <label for="mid" data-i18n="enterId">Enter Mosque ID</label>
-    <input id="mid" class="upper" autocomplete="off" placeholder="TEST01" maxlength="12">
+    <input id="mid" class="upper" autocomplete="off" placeholder="JMFM" maxlength="12">
     <label for="pin" data-i18n="pin">Broadcaster PIN</label>
     <input id="pin" type="password" inputmode="numeric" autocomplete="off" maxlength="8">
     <button class="btn red" id="goBtn" data-i18n="goLive">Go Live</button>
@@ -25,12 +25,15 @@
   </section>
 
   <section id="liveBox" class="card center hidden">
-    <span class="badge live" data-i18n="youAreLive">You are LIVE</span>
+    <span class="badge live" id="liveBadge" data-i18n="youAreLive">You are LIVE</span>
     <h2 id="mname"></h2>
     <div class="timer" id="timer">00:00:00</div>
     <p class="muted" id="count"></p>
     <p class="muted" id="status"></p>
-    <button class="btn red" id="endBtn" data-i18n="endLive">End broadcast</button>
+    <div class="row">
+      <button class="btn orange" id="pauseBtn" data-i18n="pause">Pause</button>
+      <button class="btn red" id="endBtn" data-i18n="endLive">End lesson</button>
+    </div>
   </section>
 
   <p class="center muted"><a href="/" data-i18n="backToListen">← Back to listening</a></p>

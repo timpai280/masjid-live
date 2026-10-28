@@ -1,8 +1,8 @@
 {
   "name": "masjid-live-server",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "private": true,
-  "description": "Masjid Live - phone-to-phones live tafseer audio. API + web pages.",
+  "description": "Masjid Live - phone-to-phones live lessons. API, web pages, recordings.",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
@@ -11,6 +11,7 @@
     "node": ">=20"
   },
   "dependencies": {
+    "@livekit/rtc-node": "^1.2.1",
     "express": "^4.21.0",
     "firebase-admin": "^12.7.0",
     "livekit-server-sdk": "^2.9.0"

@@ -17,7 +17,7 @@
 <main>
   <section id="join" class="card">
     <label for="mid" data-i18n="enterId">Enter Mosque ID</label>
-    <input id="mid" class="upper" autocomplete="off" placeholder="TEST01" maxlength="12">
+    <input id="mid" class="upper" autocomplete="off" placeholder="JMFM" maxlength="12">
     <button class="btn" id="joinBtn" data-i18n="connect">Connect</button>
     <p class="err" id="joinErr"></p>
   </section>
@@ -27,10 +27,36 @@
     <h2 id="mname"></h2>
     <span class="badge" id="badge"></span>
     <p class="muted" id="count"></p>
+    <div class="schedule hidden" id="scheduleBox"><b data-i18n="schedule">Schedule</b><div id="scheduleText"></div></div>
     <button class="btn big" id="playBtn">▶</button>
     <p id="stateText" class="muted"></p>
+    <p class="ok" id="note"></p>
     <p class="err" id="playErr"></p>
-    <button class="btn ghost" id="changeBtn" data-i18n="changeMosque">Change mosque</button>
+    <div class="row">
+      <button class="btn ghost" id="askBtn" data-i18n="askQuestion">Ask a question</button>
+      <button class="btn ghost" id="pastBtn" data-i18n="pastSessions">Past sessions</button>
+    </div>
+    <button class="btn ghost small" id="changeBtn" data-i18n="changeMosque">Change mosque</button>
+  </section>
+
+  <section id="askBox" class="card hidden">
+    <p class="muted" data-i18n="askHint"></p>
+    <label for="qName" data-i18n="yourName">Your name (optional)</label>
+    <input id="qName" maxlength="40" class="normal">
+    <label for="qText" data-i18n="yourQuestion">Your question</label>
+    <textarea id="qText" maxlength="500" rows="4"></textarea>
+    <div class="row">
+      <button class="btn ghost" id="qCancel" data-i18n="cancel">Cancel</button>
+      <button class="btn" id="qSend" data-i18n="send">Send</button>
+    </div>
+    <p class="err" id="qErr"></p>
+  </section>
+
+  <section id="pastBox" class="card hidden">
+    <h2 data-i18n="pastSessions">Past sessions</h2>
+    <p class="muted" id="keptFor"></p>
+    <p class="muted" id="processing"></p>
+    <div id="recList"></div>
   </section>
 
   <p class="center muted"><a href="/broadcast" data-i18n="iAmBroadcaster">I am the lecturer → Broadcast</a></p>

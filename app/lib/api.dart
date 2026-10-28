@@ -9,11 +9,16 @@ class ApiException implements Exception {
   String toString() => code;
 }
 
-/// Talks to our server (Mosque IDs, PIN check, tokens, LIVE status).
+/// Talks to our server (Mosque IDs, PIN check, tokens, status, schedule, questions, recordings).
 class Api {
   static String baseUrl = '';
 
-  static Uri _uri(String path) => Uri.parse(baseUrl.trim().replaceAll(RegExp(r'/+$'), '') + path);
+  static String get base => baseUrl.trim().replaceAll(RegExp(r'/+$'), '');
+
+  /// Full URL for a server path such as /recordings/JMFM/x.m4a
+  static String abs(String path) => path.startsWith('http') ? path : base + path;
+
+  static Uri _uri(String path) => Uri.parse(base + path);
 
   static Future<Map<String, dynamic>> _send(Future<http.Response> Function() request) async {
     http.Response r;
@@ -24,7 +29,7 @@ class Api {
     }
     Map<String, dynamic> body = {};
     try {
-      final d = jsonDecode(r.body);
+      final d = jsonDecode(utf8.decode(r.bodyBytes));
       if (d is Map<String, dynamic>) body = d;
     } catch (_) {}
     if (r.statusCode < 200 || r.statusCode >= 300) {

@@ -2,23 +2,26 @@
 const { Room, RoomEvent } = LivekitClient;
 const $ = (id) => document.getElementById(id);
 
-let room = null, creds = null, startedAt = 0, tick = null, poll = null, wakeLock = null, listeners = 0;
+let room = null, creds = null, startedAt = 0, tick = null, poll = null, wakeLock = null, listeners = 0, paused = false;
 
 const two = (n) => String(n).padStart(2, '0');
 function updTimer() {
   const s = Math.floor((Date.now() - startedAt) / 1000);
   $('timer').textContent = `${two(Math.floor(s / 3600))}:${two(Math.floor(s / 60) % 60)}:${two(s % 60)}`;
 }
-function updCount() {
+function updUi() {
   $('count').textContent = `${listeners} ${t('listeners')}`;
+  $('liveBadge').textContent = paused ? '⏸ ' + t('youArePaused') : t('youAreLive');
+  $('liveBadge').className = 'badge ' + (paused ? 'paused' : 'live');
+  $('pauseBtn').textContent = paused ? t('resume') : t('pause');
 }
-window.onLangChange = updCount;
+window.onLangChange = updUi;
 
 async function pollCount() {
   try {
     const j = await api('/api/mosques/' + encodeURIComponent(creds.mosqueId));
     listeners = j.listeners;
-    updCount();
+    updUi();
   } catch (_) {}
 }
 
@@ -32,34 +35,55 @@ async function goLive() {
     const { url, token, mosque } = await api('/api/broadcast/token', { mosqueId, pin });
     creds = { mosqueId, pin };
     localStorage.setItem('bMosqueId', mosqueId);
-    room = new Room({
+    const r = new Room({
       audioCaptureDefaults: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
     });
-    room.on(RoomEvent.Disconnected, ended);
-    room.on(RoomEvent.Reconnecting, () => ($('status').textContent = t('reconnecting')));
-    room.on(RoomEvent.Reconnected, () => ($('status').textContent = ''));
-    await room.connect(url, token);
+    room = r;
+    r.on(RoomEvent.Disconnected, () => {
+      if (room === r) ended();
+    });
+    r.on(RoomEvent.Reconnecting, () => ($('status').textContent = t('reconnecting')));
+    r.on(RoomEvent.Reconnected, () => ($('status').textContent = ''));
+    await r.connect(url, token);
     try {
-      await room.localParticipant.setMicrophoneEnabled(true);
+      await r.localParticipant.setMicrophoneEnabled(true);
     } catch (e) {
       throw new Error('mic');
     }
-    api('/api/broadcast/live', creds).catch(() => {});
+    await api('/api/broadcast/state', { ...creds, state: 'live' }).catch(() => {});
+    paused = false;
     $('mname').textContent = mosque.name;
     $('login').classList.add('hidden');
     $('liveBox').classList.remove('hidden');
     startedAt = Date.now();
     updTimer();
-    updCount();
+    updUi();
     tick = setInterval(updTimer, 1000);
     poll = setInterval(pollCount, 10000);
     try { wakeLock = navigator.wakeLock ? await navigator.wakeLock.request('screen') : null; } catch (_) {}
   } catch (e) {
-    if (room) room.disconnect();
+    const r = room;
     room = null;
+    if (r) r.disconnect();
     $('err').textContent = errMsg(e);
   } finally {
     $('goBtn').disabled = false;
+  }
+}
+
+async function togglePause() {
+  if (!room) return;
+  $('pauseBtn').disabled = true;
+  try {
+    const next = !paused;
+    await room.localParticipant.setMicrophoneEnabled(!next);
+    await api('/api/broadcast/state', { ...creds, state: next ? 'paused' : 'resumed' });
+    paused = next;
+    updUi();
+  } catch (e) {
+    $('status').textContent = errMsg(e);
+  } finally {
+    $('pauseBtn').disabled = false;
   }
 }
 
@@ -74,10 +98,14 @@ function ended() {
 }
 
 $('goBtn').onclick = goLive;
+$('pauseBtn').onclick = togglePause;
 $('endBtn').onclick = async () => {
   if (!confirm(t('endConfirm'))) return;
-  if (room) await room.disconnect();
-  else ended();
+  await api('/api/broadcast/state', { ...creds, state: 'ended' }).catch(() => {});
+  const r = room;
+  room = null;
+  if (r) await r.disconnect();
+  ended();
 };
 
 applyI18n();

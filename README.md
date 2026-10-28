@@ -51,7 +51,7 @@ English + اردو. Free to run (Oracle Cloud free tier).
 ### 3. Oracle Cloud (free server)
 1. Sign up at https://cloud.oracle.com (free tier; a card is used for verification only).
 2. **Create a compute instance**:
-   - Image: **Ubuntu 22.04** (or 24.04)
+   - Image: **Ubuntu 24.04** (not 20.04, not Minimal)
    - Shape: **VM.Standard.A1.Flex** (1 OCPU, 6 GB) or **VM.Standard.E2.1.Micro**. Both are "Always Free".
    - Keep "Assign a public IPv4 address" ON.
    - **Advanced options → Management → Paste cloud-init script**: paste `deploy/oracle-setup.sh`
@@ -117,6 +117,16 @@ Change code on GitHub and two things happen automatically:
 | Update won't install | Uninstall the old app first (or set up step 5) |
 | Server stopped after weeks | Oracle may reclaim idle free servers; upgrading to "Pay As You Go" prevents it, and it stays free within the limits |
 
-## Not in version 1 (planned)
-- Recording and "Past sessions" (listen later)
-- iPhone app (iPhone users can use the website for now)
+## Features (version 2)
+- **Pause / Resume** – listeners stay connected and see "⏸ Paused"; **End** – everyone sees "Lesson ended"
+- **Schedule** – the lecturer edits it in the app; listeners see it on screen + get a notification
+- **Questions** – listeners send questions (name optional); the lecturer reads/deletes them with the PIN
+- **Past sessions** – every lesson is recorded on the server and kept for 14 days (`RECORDING_DAYS`)
+- **Two APKs** – `MasjidLive.apk` (modern phones, ~40 MB) and `MasjidLive-old-phones.apk` (32-bit phones)
+- **Permanent signing key** (secret `ANDROID_KEYSTORE_B64`) – updates install over the old app
+- **Default mosque** (variable `DEFAULT_MOSQUE_ID`) – listeners don't need to type an ID
+
+⚠️ Pushing changes to `server/` or `deploy/` restarts the server within 5 minutes – don't do it during a lesson.
+
+## Not yet
+- iPhone app (iPhone users use the website)

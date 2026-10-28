@@ -4,7 +4,21 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 
-/// "Tafseer is LIVE" notifications (Firebase Cloud Messaging).
+/// A notification the user tapped: which mosque, and what kind ('live' or 'schedule').
+class PushOpen {
+  final String mosqueId;
+  final String type;
+  const PushOpen(this.mosqueId, this.type);
+}
+
+PushOpen? _parse(RemoteMessage? m) {
+  final id = m?.data['mosqueId'];
+  if (id is! String || id.isEmpty) return null;
+  final type = m?.data['type'];
+  return PushOpen(id, type is String ? type : 'live');
+}
+
+/// "Lesson is LIVE" / "Schedule updated" notifications (Firebase Cloud Messaging).
 /// Each mosque is a topic: mosque_<ID>. If Firebase is not set up yet
 /// (no google-services.json at build time) everything here quietly does nothing.
 class Push {
@@ -38,23 +52,21 @@ class Push {
     } catch (_) {}
   }
 
-  /// Mosque ID if the app was opened by tapping a LIVE notification.
-  static Future<String?> initialLiveMosque() async {
+  /// Set if the app was opened by tapping a notification.
+  static Future<PushOpen?> initialOpen() async {
     if (!ready) return null;
     try {
-      final m = await FirebaseMessaging.instance.getInitialMessage();
-      final id = m?.data['mosqueId'];
-      return id is String && id.isNotEmpty ? id : null;
+      return _parse(await FirebaseMessaging.instance.getInitialMessage());
     } catch (_) {
       return null;
     }
   }
 
-  static StreamSubscription<RemoteMessage>? onOpened(void Function(String mosqueId) cb) {
+  static StreamSubscription<RemoteMessage>? onOpened(void Function(PushOpen open) cb) {
     if (!ready) return null;
     return FirebaseMessaging.onMessageOpenedApp.listen((m) {
-      final id = m.data['mosqueId'];
-      if (id is String && id.isNotEmpty) cb(id);
+      final o = _parse(m);
+      if (o != null) cb(o);
     });
   }
 }

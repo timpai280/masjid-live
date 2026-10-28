@@ -18,6 +18,7 @@ jobs:
       KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
       GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
       SERVER_URL: ${{ vars.SERVER_URL }}
+      DEFAULT_MOSQUE_ID: ${{ vars.DEFAULT_MOSQUE_ID }}
     steps:
       - uses: actions/checkout@v4
 
@@ -48,11 +49,12 @@ jobs:
         working-directory: app
         run: python3 ../.github/scripts/patch_gradle.py android
 
-      - name: Use the fixed signing key (lets updates install over the old app)
+      - name: Use the permanent signing key (updates install over the old app)
         if: env.KEYSTORE_B64 != ''
         run: |
           mkdir -p ~/.android
           echo "$KEYSTORE_B64" | base64 -d > ~/.android/debug.keystore
+          echo "Signing key installed"
 
       - name: Get packages
         working-directory: app
@@ -63,28 +65,40 @@ jobs:
         continue-on-error: true
         run: dart run flutter_launcher_icons
 
-      - name: Build APK
+      - name: Build APKs (one for modern phones, one for old 32-bit phones)
         working-directory: app
         run: |
-          echo "Server address baked into the app: ${SERVER_URL:-'(none - set it inside the app)'}"
-          flutter build apk --release \
+          echo "Server: ${SERVER_URL:-'(none)'}  Default mosque: ${DEFAULT_MOSQUE_ID:-'(none)'}"
+          flutter build apk --release --split-per-abi \
             --target-platform android-arm,android-arm64 \
             --build-number=${{ github.run_number }} \
-            --dart-define=SERVER_URL="$SERVER_URL"
-          cp build/app/outputs/flutter-apk/app-release.apk ../MasjidLive.apk
+            --dart-define=SERVER_URL="$SERVER_URL" \
+            --dart-define=DEFAULT_MOSQUE_ID="$DEFAULT_MOSQUE_ID"
+          ls -la build/app/outputs/flutter-apk/
+          cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk ../MasjidLive.apk
+          cp build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk ../MasjidLive-old-phones.apk
+          ls -la ../*.apk
 
       - uses: actions/upload-artifact@v4
         with:
           name: MasjidLive-apk
-          path: MasjidLive.apk
+          path: |
+            MasjidLive.apk
+            MasjidLive-old-phones.apk
 
       - name: Publish as a GitHub Release (stable download link)
         uses: softprops/action-gh-release@v2
         with:
           tag_name: apk-${{ github.run_number }}
           name: Masjid Live - build ${{ github.run_number }}
-          files: MasjidLive.apk
+          files: |
+            MasjidLive.apk
+            MasjidLive-old-phones.apk
           make_latest: 'true'
           body: |
-            Download **MasjidLive.apk** below and open it on your Android phone to install.
-            Permanent link to the newest version: https://github.com/${{ github.repository }}/releases/latest/download/MasjidLive.apk
+            **MasjidLive.apk** – for almost all phones (2017 or newer).
+            **MasjidLive-old-phones.apk** – only if the first one says "App not installed" / "not compatible" (very old or Android Go phones).
+
+            Permanent links to the newest version:
+            - https://github.com/${{ github.repository }}/releases/latest/download/MasjidLive.apk
+            - https://github.com/${{ github.repository }}/releases/latest/download/MasjidLive-old-phones.apk

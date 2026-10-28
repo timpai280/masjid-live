@@ -1,0 +1,39 @@
+# Masjid Live - everything that runs on the Oracle server
+#   livekit : the live-audio engine (receives the lecturer's audio, copies it to every listener)
+#   api     : our small server (Mosque IDs, PIN check, LIVE status, notifications, web pages)
+#   caddy   : gives the site a free HTTPS certificate and routes traffic
+# All three use the server's network directly (network_mode: host) - simplest and fastest for audio.
+services:
+  livekit:
+    image: livekit/livekit-server:latest
+    command: --config /etc/livekit.yaml
+    network_mode: host
+    restart: unless-stopped
+    volumes:
+      - ./livekit.yaml:/etc/livekit.yaml:ro
+
+  api:
+    build: ../server
+    network_mode: host
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATA_DIR: /app/data
+      PORT: "3000"
+      HOST: 127.0.0.1
+    volumes:
+      - ./data:/app/data
+
+  caddy:
+    image: caddy:2
+    network_mode: host
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  caddy_data:
+  caddy_config:

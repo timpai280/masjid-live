@@ -1,0 +1,11 @@
+{
+  "name": "Masjid Live",
+  "short_name": "Masjid Live",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f4f7f5",
+  "theme_color": "#0f7b5f",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

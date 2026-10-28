@@ -1,0 +1,18 @@
+# secrets + data created on the server (never commit these)
+deploy/.env
+deploy/livekit.yaml
+deploy/data/
+server/data/
+node_modules/
+
+# Flutter build output (GitHub Actions creates these)
+app/android/
+app/build/
+app/.dart_tool/
+app/.flutter-plugins
+app/.flutter-plugins-dependencies
+app/pubspec.lock
+app/test/
+*.apk
+*.keystore
+google-services.json

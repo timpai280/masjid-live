@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Masjid Live - Admin</title>
+  <link rel="icon" href="/icon.svg">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header><h1>Admin</h1></header>
+<main>
+  <section class="card">
+    <label for="key">Admin key (from SETUP-INFO.txt on the server)</label>
+    <input id="key" type="password" autocomplete="off">
+    <button class="btn" id="loadBtn">Show mosques</button>
+    <p class="err" id="err"></p>
+    <table id="list"></table>
+  </section>
+
+  <section class="card">
+    <h2>Add a mosque</h2>
+    <label for="name">Mosque name</label>
+    <input id="name" placeholder="Masjid-e-Noor">
+    <label for="newId">Mosque ID (optional, leave empty to auto-generate)</label>
+    <input id="newId" class="upper" maxlength="12">
+    <label for="newPin">Broadcaster PIN (4-8 digits)</label>
+    <input id="newPin" inputmode="numeric" maxlength="8">
+    <button class="btn" id="addBtn">Add mosque</button>
+    <p class="err" id="addMsg"></p>
+  </section>
+
+  <section class="card">
+    <h2>Change name / PIN</h2>
+    <label for="eId">Mosque ID</label>
+    <input id="eId" class="upper" maxlength="12">
+    <label for="eName">New name (optional)</label>
+    <input id="eName">
+    <label for="ePin">New PIN (optional)</label>
+    <input id="ePin" inputmode="numeric" maxlength="8">
+    <button class="btn" id="editBtn">Save changes</button>
+    <p class="err" id="editMsg"></p>
+  </section>
+</main>
+<script>
+const $ = (id) => document.getElementById(id);
+$('key').value = sessionStorage.getItem('adminKey') || '';
+async function call(method, path, body) {
+  sessionStorage.setItem('adminKey', $('key').value);
+  const r = await fetch(path, { method, headers: { 'Content-Type': 'application/json', 'x-admin-key': $('key').value }, body: body ? JSON.stringify(body) : undefined });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.message || j.code || 'error');
+  return j;
+}
+async function load() {
+  $('err').textContent = '';
+  try {
+    const list = await call('GET', '/api/admin/mosques');
+    $('list').innerHTML = '<tr><th>ID</th><th>Name</th><th>Share link</th></tr>' + list.map(m =>
+      `<tr><td><b>${m.id}</b></td><td>${m.name.replace(/</g, '&lt;')}</td><td><a href="/m/${m.id}">/m/${m.id}</a></td></tr>`).join('');
+  } catch (e) { $('err').textContent = e.message; }
+}
+$('loadBtn').onclick = load;
+$('addBtn').onclick = async () => {
+  try {
+    const m = await call('POST', '/api/admin/mosques', { name: $('name').value, id: $('newId').value, pin: $('newPin').value });
+    $('addMsg').textContent = `Created: ${m.name} → ID ${m.id}`;
+    load();
+  } catch (e) { $('addMsg').textContent = e.message; }
+};
+$('editBtn').onclick = async () => {
+  try {
+    const body = {};
+    if ($('eName').value) body.name = $('eName').value;
+    if ($('ePin').value) body.pin = $('ePin').value;
+    const m = await call('POST', '/api/admin/mosques/' + encodeURIComponent($('eId').value.trim().toUpperCase()), body);
+    $('editMsg').textContent = `Saved: ${m.name} (${m.id})`;
+    load();
+  } catch (e) { $('editMsg').textContent = e.message; }
+};
+</script>
+</body>
+</html>

@@ -1,0 +1,90 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'app/**'
+      - '.github/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
+      GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+      SERVER_URL: ${{ vars.SERVER_URL }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: '3.29.3'
+          cache: true
+
+      - name: Create the Android project
+        working-directory: app
+        run: |
+          flutter create --platforms=android --org com.masjidlive --project-name masjid_live .
+          rm -rf test
+          cp -r android_overlay/. android/
+
+      - name: Add Firebase config (push notifications)
+        if: env.GOOGLE_SERVICES_JSON != ''
+        working-directory: app
+        run: printf '%s' "$GOOGLE_SERVICES_JSON" > android/app/google-services.json
+
+      - name: Patch Gradle files
+        working-directory: app
+        run: python3 ../.github/scripts/patch_gradle.py android
+
+      - name: Use the fixed signing key (lets updates install over the old app)
+        if: env.KEYSTORE_B64 != ''
+        run: |
+          mkdir -p ~/.android
+          echo "$KEYSTORE_B64" | base64 -d > ~/.android/debug.keystore
+
+      - name: Get packages
+        working-directory: app
+        run: flutter pub get
+
+      - name: App icon
+        working-directory: app
+        continue-on-error: true
+        run: dart run flutter_launcher_icons
+
+      - name: Build APK
+        working-directory: app
+        run: |
+          echo "Server address baked into the app: ${SERVER_URL:-'(none - set it inside the app)'}"
+          flutter build apk --release \
+            --target-platform android-arm,android-arm64 \
+            --build-number=${{ github.run_number }} \
+            --dart-define=SERVER_URL="$SERVER_URL"
+          cp build/app/outputs/flutter-apk/app-release.apk ../MasjidLive.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: MasjidLive-apk
+          path: MasjidLive.apk
+
+      - name: Publish as a GitHub Release (stable download link)
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: apk-${{ github.run_number }}
+          name: Masjid Live - build ${{ github.run_number }}
+          files: MasjidLive.apk
+          make_latest: 'true'
+          body: |
+            Download **MasjidLive.apk** below and open it on your Android phone to install.
+            Permanent link to the newest version: https://github.com/${{ github.repository }}/releases/latest/download/MasjidLive.apk

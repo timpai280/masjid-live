@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Masjid Live</title>
+  <meta name="theme-color" content="#0f7b5f">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/icon.svg">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header>
+  <h1 data-i18n="appName">Masjid Live</h1>
+  <button class="lang" id="langBtn" onclick="toggleLang()">اردو</button>
+</header>
+<main>
+  <section id="join" class="card">
+    <label for="mid" data-i18n="enterId">Enter Mosque ID</label>
+    <input id="mid" class="upper" autocomplete="off" placeholder="TEST01" maxlength="12">
+    <button class="btn" id="joinBtn" data-i18n="connect">Connect</button>
+    <p class="err" id="joinErr"></p>
+  </section>
+
+  <section id="player" class="card center hidden">
+    <p class="muted" data-i18n="mosque">Mosque</p>
+    <h2 id="mname"></h2>
+    <span class="badge" id="badge"></span>
+    <p class="muted" id="count"></p>
+    <button class="btn big" id="playBtn">▶</button>
+    <p id="stateText" class="muted"></p>
+    <p class="err" id="playErr"></p>
+    <button class="btn ghost" id="changeBtn" data-i18n="changeMosque">Change mosque</button>
+  </section>
+
+  <p class="center muted"><a href="/broadcast" data-i18n="iAmBroadcaster">I am the lecturer → Broadcast</a></p>
+</main>
+<div id="audio" style="display:none"></div>
+<script src="https://cdn.jsdelivr.net/npm/livekit-client@2/dist/livekit-client.umd.js"></script>
+<script src="/i18n.js"></script>
+<script src="/listen.js"></script>
+</body>
+</html>

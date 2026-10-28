@@ -1,0 +1,11 @@
+# HTTPS for {$DOMAIN} (certificate from Let's Encrypt, renewed automatically)
+{$DOMAIN} {
+	encode gzip
+
+	# Live-audio connections go to LiveKit
+	@livekit path /rtc /rtc/* /twirp/*
+	reverse_proxy @livekit 127.0.0.1:7880
+
+	# Everything else (web pages + API) goes to our server
+	reverse_proxy 127.0.0.1:3000
+}
